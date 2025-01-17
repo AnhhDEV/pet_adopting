@@ -10,5 +10,6 @@ data class MessageUiState(
     val receiver: UserData? = null,
     val onMessageChange: String = "",
     val newChatId: String = "",
-    val userId: String = ""
+    val userId: String = "",
+    val url: String = ""
 )

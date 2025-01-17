@@ -34,6 +34,7 @@ import com.tanh.petadopt.presentation.home.Home
 import com.tanh.petadopt.presentation.home.HomeViewModel
 import com.tanh.petadopt.presentation.inbox.InboxScreen
 import com.tanh.petadopt.presentation.inbox.InboxViewModel
+import com.tanh.petadopt.presentation.map.MapScreen
 import com.tanh.petadopt.presentation.owned_post.OwnedPostScreen
 import com.tanh.petadopt.presentation.owned_post.PostViewModel
 import com.tanh.petadopt.presentation.pet_detail.DetailScreen
@@ -210,6 +211,12 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(route.route)
                                 }
                             }
+                        }
+
+                        composable(
+                            route = Util.MAP
+                        ) {
+                            MapScreen()
                         }
                     }
                 }

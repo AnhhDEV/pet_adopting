@@ -93,6 +93,16 @@ dependencies {
 
     //azure-storage-android
     implementation ("com.microsoft.azure.android:azure-storage-android:2.0.0@aar")
+
+    //mapbox
+    val mapVersion = "11.9.0"
+    implementation("com.mapbox.maps:android:$mapVersion")
+    implementation("com.mapbox.extension:maps-compose:11.9.0")
+
+    //retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
 }
 
 kapt {
