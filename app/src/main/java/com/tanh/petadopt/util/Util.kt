@@ -6,7 +6,6 @@ object Util {
 
     //blob storage azure
 
-
     const val BASE_URL = "https://api.mapbox.com"
 
     const val HOME = "Home"

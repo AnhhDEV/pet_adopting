@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.foundation.layout.android)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
