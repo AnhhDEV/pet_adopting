@@ -5,6 +5,10 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
@@ -20,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.tanh.petadopt.domain.service.MessageNotificationService
 import com.tanh.petadopt.presentation.EntireScreen
 import com.tanh.petadopt.presentation.add.AddScreen
@@ -49,6 +54,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -98,7 +104,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { paddings ->
-                    NavHost(
+                    AnimatedNavHost(
                         modifier = Modifier.padding(paddings),
                         navController = navController,
                         startDestination = Util.LOG_IN
@@ -117,8 +123,19 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        composable(Util.HOME) {
-                            if(!flag) {
+                        composable(Util.HOME, enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(1000)
+                            )
+                        },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }) {
+                            if (!flag) {
                                 flag = true
                                 Intent(
                                     applicationContext,
@@ -136,7 +153,19 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
-                            route = Util.FAVORITE
+                            route = Util.FAVORITE,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(1000)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }
                         ) {
                             isLoggedIn = true
                             FavoriteScreen(viewModel = homeViewModel) {
@@ -182,19 +211,32 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable(Util.PROFILE) {
+                        composable(Util.PROFILE,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(1000)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }) {
                             isLoggedIn = true
                             ProfileScreen(
                                 viewModel = profileViewModel
                             ) {
-                                if(it.route == Util.LOG_IN) {
-                                    if(flag) {
+                                if (it.route == Util.LOG_IN) {
+                                    if (flag) {
                                         flag = false
                                         Intent(
                                             applicationContext,
                                             MessageNotificationService::class.java
-                                        ).also {intent ->
-                                            intent.action = MessageNotificationService.Actions.STOP.toString()
+                                        ).also { intent ->
+                                            intent.action =
+                                                MessageNotificationService.Actions.STOP.toString()
                                             startService(intent)
                                         }
                                     }
@@ -220,7 +262,19 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable(Util.INBOX) {
+                        composable(Util.INBOX,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(1000)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }) {
                             isLoggedIn = true
                             InboxScreen(
                                 viewModel = inboxViewModel
