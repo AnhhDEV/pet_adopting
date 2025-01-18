@@ -210,6 +210,54 @@ class ChatRepository @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
+    fun getChatsService(userId: String): Flow<Result<List<Chat>, Exception>> {
+        return callbackFlow {
+            var snapshotStateListener: ListenerRegistration? = null
+            try {
+                snapshotStateListener = chatCollection
+                    .whereArrayContains("id", userId)
+                    .orderBy("lastTime", Query.Direction.DESCENDING)
+                    .addSnapshotListener { snapshot, exception ->
+                        if (exception != null) {
+                            trySend(
+                                Result.Error(
+                                    exception ?: Exception("Not found chat")
+                                )
+                            ).isSuccess
+                            return@addSnapshotListener
+                        }
+                        val response = if (snapshot != null) {
+                            val chats = snapshot.toObjects(Chat::class.java).mapNotNull { chat ->
+                                Log.d("repo", "repo: " + userId)
+                                val ids = chat.id
+                                if (ids.size == 2) {
+                                    val toId = ids.firstOrNull { it != chat.fromId }
+                                    if  (toId != null) {
+                                        chat.copy(
+                                            toId = toId
+                                        )
+                                    } else {
+                                        null
+                                    }
+                                } else {
+                                    null
+                                }
+                            }
+                            Result.Success(chats)
+                        } else {
+                            Result.Success(emptyList())
+                        }
+                        trySend(response).isSuccess
+                    }
+            } catch (e: Exception) {
+                trySend(Result.Error(e))
+            }
+            awaitClose {
+                snapshotStateListener?.remove()
+            }
+        }.flowOn(Dispatchers.IO)
+    }
+
     //tạo message
     suspend fun createMessage(chatId: String, message: Message) {
         try {
@@ -229,7 +277,8 @@ class ChatRepository @Inject constructor(
 
                 val updates = mapOf(
                     "lastMessage" to message.content,
-                    "lastTime" to message.time
+                    "lastTime" to message.time,
+                    "fromId" to message.uid
                 )
                 chatCollection.document(chatId).update(updates).await()
             }
