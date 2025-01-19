@@ -1,14 +1,19 @@
 package com.tanh.petadopt.presentation.add
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tanh.petadopt.data.AzureBlobStorage
 import com.tanh.petadopt.data.GoogleAuthUiClient
 import com.tanh.petadopt.data.PetRepository
+import com.tanh.petadopt.data.api.GeocodingApi
+import com.tanh.petadopt.domain.api.Feature
+import com.tanh.petadopt.domain.api.Geometry
 import com.tanh.petadopt.presentation.OneTimeEvent
 import com.tanh.petadopt.util.Util
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,8 +27,9 @@ import javax.inject.Inject
 class AddViewModel @Inject constructor(
     private val auth: GoogleAuthUiClient,
     private val petRepository: PetRepository,
-    private val blobStorage: AzureBlobStorage
-): ViewModel() {
+    private val blobStorage: AzureBlobStorage,
+    private val geocoding: GeocodingApi
+) : ViewModel() {
 
     private val _state = MutableStateFlow(AddUiState())
     val state = _state.asStateFlow()
@@ -45,37 +51,56 @@ class AddViewModel @Inject constructor(
     }
 
     fun onInsertPet() {
-        if(isValidInput()) {
-            val name = _state.value.name
-            val photoUrl = _state.value.uri
-            val category = _state.value.category
-            val age = convertToDouble(_state.value.age, "age") ?: 0.0
-            val weight = convertToDouble(_state.value.weight, "weight") ?: 0.0
-            val breed = _state.value.breed
-            val gender = _state.value.gender
-            val address = _state.value.address
-            val about = _state.value.about
-            val ownerId = auth.getSignedInUser()?.userId ?: ""
+        viewModelScope.launch {
+            if (isValidInput()) {
+                val name = _state.value.name
+                val photoUrl = _state.value.uri
+                val category = _state.value.category
+                val age = convertToDouble(_state.value.age, "age") ?: 0.0
+                val weight = convertToDouble(_state.value.weight, "weight") ?: 0.0
+                val breed = _state.value.breed
+                val gender = _state.value.gender
+                val address = _state.value.address
+                val about = _state.value.about
+                val ownerId = auth.getSignedInUser()?.userId ?: ""
 
-            insertPet(
-                ownerId = ownerId,
-                name = name,
-                age = age,
-                weight = weight,
-                breed = breed,
-                category = category,
-                gender = gender,
-                photoUrl = photoUrl,
-                address = address,
-                about = about
-            )
+                getAddress(address = address)
+                Log.d("coor", ".: ${state.value.longitude}")
+                insertPet(
+                    ownerId = ownerId,
+                    name = name,
+                    age = age,
+                    weight = weight,
+                    breed = breed,
+                    category = category,
+                    gender = gender,
+                    photoUrl = photoUrl,
+                    address = address,
+                    about = about,
+                    longitude = _state.value.longitude,
+                    latitude = _state.value.latitude
+                )
 
-            resetState()
-            sendEvent(OneTimeEvent.Navigate(Util.HOME))
-        } else {
-            sendEvent(OneTimeEvent.ShowToast("Please fill in all fields"))
+                resetState()
+                sendEvent(OneTimeEvent.Navigate(Util.HOME))
+            } else {
+                sendEvent(OneTimeEvent.ShowToast("Please fill in all fields"))
+            }
         }
     }
+
+    suspend fun getAddress(address: String) {
+            val feature = geocoding.getCoordinate(
+                query = address,
+                accessToken = Util.MAPBOX_TOKEN
+            ).features[0]
+            Log.d("coor", feature.geometry.coordinates.toString())
+            _state.value = _state.value.copy(
+                longitude = feature.geometry.coordinates[0],
+                latitude = feature.geometry.coordinates[1]
+            )
+    }
+
 
     private fun insertPet(
         ownerId: String,
@@ -87,7 +112,9 @@ class AddViewModel @Inject constructor(
         gender: Boolean,
         photoUrl: String,
         address: String,
-        about: String
+        about: String,
+        longitude: Double,
+        latitude: Double
     ) {
         viewModelScope.launch {
             petRepository.insertPet(
@@ -100,17 +127,19 @@ class AddViewModel @Inject constructor(
                 gender = gender,
                 photoUrl = photoUrl,
                 address = address,
-                about = about
+                about = about,
+                longitude = longitude,
+                latitude = latitude
             )
         }
     }
 
     private fun isValidInput(): Boolean {
-        if(_state.value.uri.isBlank()) {
+        if (_state.value.uri.isBlank()) {
             _state.value = _state.value.copy(photoUrl = "Photo cannot be empty")
             return false
         }
-        if(_state.value.name.isBlank()) {
+        if (_state.value.name.isBlank()) {
             _state.value = _state.value.copy(nameError = "Name cannot be empty")
             return false
         }
@@ -118,7 +147,7 @@ class AddViewModel @Inject constructor(
             _state.value = _state.value.copy(breedError = "Breed cannot be empty")
             return false
         }
-        if(_state.value.age.isBlank()) {
+        if (_state.value.age.isBlank()) {
             _state.value = _state.value.copy(ageError = "Age cannot be empty")
             return false
         }
@@ -137,10 +166,10 @@ class AddViewModel @Inject constructor(
     }
 
     private fun convertToDouble(number: String, field: String): Double? {
-        if(number.any { it.isLetter() }) {
-            if(field == "age") {
+        if (number.any { it.isLetter() }) {
+            if (field == "age") {
                 _state.value = _state.value.copy(ageError = "Don't type string in this field")
-            } else if(field == "weight") {
+            } else if (field == "weight") {
                 _state.value = _state.value.copy(weightError = "Don't type string in this field")
             }
             return null
@@ -149,9 +178,9 @@ class AddViewModel @Inject constructor(
         return try {
             newNumber.toDouble()
         } catch (e: NumberFormatException) {
-            if(field == "age") {
+            if (field == "age") {
                 _state.value = _state.value.copy(ageError = "Invalid number")
-            } else if(field == "weight") {
+            } else if (field == "weight") {
                 _state.value = _state.value.copy(weightError = "Invalid number")
             }
             null

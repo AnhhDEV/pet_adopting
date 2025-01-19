@@ -1,26 +1,31 @@
 package com.tanh.petadopt
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.tanh.petadopt.domain.service.MessageNotificationService
 import com.tanh.petadopt.presentation.EntireScreen
 import com.tanh.petadopt.presentation.add.AddScreen
 import com.tanh.petadopt.presentation.add.AddViewModel
@@ -34,6 +39,8 @@ import com.tanh.petadopt.presentation.home.Home
 import com.tanh.petadopt.presentation.home.HomeViewModel
 import com.tanh.petadopt.presentation.inbox.InboxScreen
 import com.tanh.petadopt.presentation.inbox.InboxViewModel
+import com.tanh.petadopt.presentation.map.MapScreen
+import com.tanh.petadopt.presentation.map.MapViewModel
 import com.tanh.petadopt.presentation.owned_post.OwnedPostScreen
 import com.tanh.petadopt.presentation.owned_post.PostViewModel
 import com.tanh.petadopt.presentation.pet_detail.DetailScreen
@@ -47,8 +54,23 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    android.Manifest.permission.POST_NOTIFICATIONS,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.FOREGROUND_SERVICE
+                ),
+                1
+            )
+        }
+
         setContent {
             PetAdoptTheme {
 
@@ -68,6 +90,9 @@ class MainActivity : ComponentActivity() {
                 var isLoggedIn by remember {
                     mutableStateOf(state.isLoginSuccessful)
                 }
+                var flag by remember {
+                    mutableStateOf(false)
+                }
 
                 Scaffold(
                     bottomBar = {
@@ -79,12 +104,13 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { paddings ->
-                    NavHost(
+                    AnimatedNavHost(
                         modifier = Modifier.padding(paddings),
                         navController = navController,
                         startDestination = Util.LOG_IN
                     ) {
                         composable(Util.LOG_IN) {
+
                             isLoggedIn = false
                             Login(
                                 viewModel = loginViewModel
@@ -97,7 +123,29 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        composable(Util.HOME) {
+                        composable(Util.HOME, enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it },
+                                animationSpec = tween(1000)
+                            )
+                        },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }) {
+                            if (!flag) {
+                                flag = true
+                                Intent(
+                                    applicationContext,
+                                    MessageNotificationService::class.java
+                                ).also {
+                                    it.action = MessageNotificationService.Actions.START.toString()
+                                    startService(it)
+                                }
+                            }
+
                             isLoggedIn = true
                             Home(viewModel = homeViewModel) {
                                 navController.navigate(it.route)
@@ -105,7 +153,19 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
-                            route = Util.FAVORITE
+                            route = Util.FAVORITE,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(1000)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }
                         ) {
                             isLoggedIn = true
                             FavoriteScreen(viewModel = homeViewModel) {
@@ -130,7 +190,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = detailViewModel,
                                 petId = petId
                             ) { event ->
-                                if(event.route == "back") {
+                                if (event.route == "back") {
                                     navController.popBackStack()
                                 } else {
                                     navController.navigate(event.route)
@@ -143,7 +203,7 @@ class MainActivity : ComponentActivity() {
                             AddScreen(
                                 viewModel = addViewModel
                             ) {
-                                if(it.route == "back") {
+                                if (it.route == "back") {
                                     navController.popBackStack()
                                 } else {
                                     navController.navigate(it.route)
@@ -151,12 +211,37 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable(Util.PROFILE) {
+                        composable(Util.PROFILE,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(1000)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }) {
                             isLoggedIn = true
                             ProfileScreen(
                                 viewModel = profileViewModel
                             ) {
-                                if(route == Util.LOG_IN) {
+                                if (it.route == Util.LOG_IN) {
+                                    if (flag) {
+                                        flag = false
+                                        Intent(
+                                            applicationContext,
+                                            MessageNotificationService::class.java
+                                        ).also { intent ->
+                                            intent.action =
+                                                MessageNotificationService.Actions.STOP.toString()
+                                            startService(intent)
+                                        }
+                                    }
+                                }
+                                if (route == Util.LOG_IN) {
                                     inboxViewModel.resetState()
                                 }
                                 navController.navigate(it.route) {
@@ -177,7 +262,19 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable(Util.INBOX) {
+                        composable(Util.INBOX,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { it },
+                                    animationSpec = tween(1000)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(1000)
+                                )
+                            }) {
                             isLoggedIn = true
                             InboxScreen(
                                 viewModel = inboxViewModel
@@ -203,12 +300,25 @@ class MainActivity : ComponentActivity() {
                                 chatId = chatId,
                                 receiverId = receiverId,
                                 viewModel = messageViewModel
-                            ) {route ->
-                                if(route.route == "back") {
+                            ) { route ->
+                                if (route.route == "back") {
                                     navController.popBackStack()
+
                                 } else {
                                     navController.navigate(route.route)
                                 }
+                            }
+                        }
+
+                        composable(
+                            route = Util.MAP
+                        ) {
+                            isLoggedIn = true
+                            val mapViewModel = hiltViewModel<MapViewModel>()
+                            MapScreen(
+                                viewModel = mapViewModel
+                            ) {
+                                navController.navigate(it.route)
                             }
                         }
                     }

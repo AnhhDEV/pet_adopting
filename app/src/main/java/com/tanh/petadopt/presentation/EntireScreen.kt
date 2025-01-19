@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import com.tanh.petadopt.presentation.home.Home
 import com.tanh.petadopt.presentation.home.HomeViewModel
+import com.tanh.petadopt.ui.theme.FilledMap
+import com.tanh.petadopt.ui.theme.OutlinedMap
 
 @Composable
 fun EntireScreen(
@@ -60,6 +62,12 @@ fun EntireScreen(
                 title = "Favorite",
                 selectedIcon = Icons.Default.Favorite,
                 unselectedIcon = Icons.Outlined.FavoriteBorder,
+                hasNews = false
+            ),
+            BottomNavigationItem(
+                title = "Map",
+                selectedIcon = FilledMap,
+                unselectedIcon = OutlinedMap,
                 hasNews = false
             ),
             BottomNavigationItem(

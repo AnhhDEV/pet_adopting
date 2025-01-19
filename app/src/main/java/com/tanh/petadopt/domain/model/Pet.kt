@@ -11,5 +11,7 @@ data class Pet(
     val gender: Boolean? = false,
     val photoUrl: String? = "",
     val address: String? = "",
-    val about: String? = ""
+    val about: String? = "",
+    val longitude: Double? = 0.0,
+    val latitude: Double? = 0.0
 )

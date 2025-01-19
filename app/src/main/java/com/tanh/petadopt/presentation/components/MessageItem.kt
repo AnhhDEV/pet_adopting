@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.tanh.petadopt.domain.model.Message
 import com.tanh.petadopt.ui.theme.gradient
 
@@ -36,39 +37,61 @@ fun MessageItem(
     ) {
         if (message.uid == userId) {
             Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = message.content ?: "No content",
-                color = androidx.compose.ui.graphics.Color.White,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .widthIn(max = widthScreen / 2)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.linearGradient(
-                            gradient
+            if(isUrl(message.content ?: "")) {
+                AsyncImage(
+                    model = message.content,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .widthIn(max = widthScreen / 2)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            } else {
+                Text(
+                    text = message.content ?: "No content",
+                    color = androidx.compose.ui.graphics.Color.White,
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .widthIn(max = widthScreen / 2)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            Brush.linearGradient(
+                                gradient
+                            )
                         )
-                    )
-                    .padding(8.dp),
-                textAlign = TextAlign.Start
-            )
+                        .padding(8.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
         } else {
-            Text(
-                text = message.content ?: "No content",
-                color = androidx.compose.ui.graphics.Color.White,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .widthIn(max = widthScreen / 2)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.linearGradient(
-                            gradient
+            if(isUrl(message.content ?: "")) {
+                AsyncImage(
+                    model = message.content,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .widthIn(max = widthScreen / 2)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+            } else {
+                Text(
+                    text = message.content ?: "No content",
+                    color = androidx.compose.ui.graphics.Color.White,
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .widthIn(max = widthScreen / 2)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            Brush.linearGradient(
+                                gradient
+                            )
                         )
-                    )
-                    .padding(8.dp),
-                textAlign = TextAlign.Start
-            )
+                        .padding(8.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
             Spacer(modifier = Modifier.weight(1f))
         }
     }
 
 }
+
+fun isUrl(message: String): Boolean = message.contains("petadopt.blob.core.windows.net")

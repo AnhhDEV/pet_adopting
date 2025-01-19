@@ -10,6 +10,8 @@ data class AddUiState(
     val gender: Boolean = false,
     val address: String = "",
     val about: String = "",
+    val longitude: Double = 0.0,
+    val latitude: Double = 0.0,
 
     val photoUrl: String? = null,
     val nameError: String? = null,

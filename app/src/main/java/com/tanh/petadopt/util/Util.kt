@@ -5,8 +5,10 @@ import com.tanh.petadopt.R
 object Util {
 
     //blob storage azure
-    const val CONNECTION_STRING =""
-    const val DEFAULT_WEB_CLIENT_ID = "856323978983-aa7m25o3rhbq38rfhdcoj6dl4fo6igeo.apps.googleusercontent.com"
+
+
+    const val BASE_URL = "https://api.mapbox.com"
+
     const val HOME = "Home"
     const val FAVORITE = "Favorite"
     const val ADD = "add"
@@ -16,6 +18,7 @@ object Util {
     const val LOG_IN = "login"
     const val DETAIL = "detail"
     const val MESSENGER = "messenger"
+    const val MAP = "Map"
 
     const val ANIMALS_COLLECTION = "pets"
     const val USERS_COLLECTION = "users"

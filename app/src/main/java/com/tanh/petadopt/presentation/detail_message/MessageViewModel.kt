@@ -1,9 +1,11 @@
 package com.tanh.petadopt.presentation.detail_message
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
+import com.tanh.petadopt.data.AzureBlobStorage
 import com.tanh.petadopt.data.ChatRepository
 import com.tanh.petadopt.data.GoogleAuthUiClient
 import com.tanh.petadopt.data.UserRepository
@@ -26,7 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MessageViewModel @Inject constructor(
     private val auth: GoogleAuthUiClient,
-    private val repository: ChatRepository
+    private val repository: ChatRepository,
+    private val azureBlobStorage: AzureBlobStorage
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MessageUiState())
@@ -34,6 +37,28 @@ class MessageViewModel @Inject constructor(
 
     private val _channel = Channel<OneTimeEvent>()
     val channel = _channel.receiveAsFlow()
+
+    fun upImage(uri: Uri, chatId: String) {
+        viewModelScope.launch {
+            _state.update { currentState ->
+                currentState.copy(
+                    url =  azureBlobStorage.uploadFileToAzureBlob(
+                        uri = uri,
+                        containerTag = "message"
+                    )
+                )
+            }
+            repository.createMessage(
+                chatId = _state.value.newChatId,
+                message = Message(
+                    content = _state.value.url,
+                    time = Timestamp.now(),
+                    isRead = false,
+                    uid = auth.getSignedInUser()?.userId
+                )
+            )
+        }
+    }
 
     suspend fun getMessages(chatId: String) {
         _state.update { currentState ->

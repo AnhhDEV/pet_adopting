@@ -150,7 +150,9 @@ class PetRepository @Inject constructor(
         gender: Boolean,
         photoUrl: String,
         address: String,
-        about: String
+        about: String,
+        longitude: Double,
+        latitude: Double
     ): Result<Boolean, Exception> {
         return try {
             withContext(Dispatchers.IO) {
@@ -167,7 +169,9 @@ class PetRepository @Inject constructor(
                         gender = gender,
                         photoUrl = photoUrl,
                         address = address,
-                        about = about
+                        about = about,
+                        longitude = longitude,
+                        latitude = latitude
                     )
                     collection.document(documentId)
                         .set(newPet)
