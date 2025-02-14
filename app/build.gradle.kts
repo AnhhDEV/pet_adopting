@@ -19,7 +19,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.tanh.petadopt.HiltTestRunner"
     }
 
     buildTypes {
@@ -40,6 +40,14 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+
+    packagingOptions {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            merges += "META-INF/LICENSE.md"
+            merges += "META-INF/LICENSE-notice.md"
+        }
     }
 }
 
@@ -107,6 +115,27 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
 
     implementation ("com.google.accompanist:accompanist-navigation-animation:0.32.0")
+
+    //truth testing
+    testImplementation ("com.google.truth:truth:1.3.0")
+    androidTestImplementation ("com.google.truth:truth:1.3.0")
+
+    //mockk
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+    testImplementation ("io.mockk:mockk:1.13.16")
+    testImplementation ("io.mockk:mockk-android:1.13.16")
+    androidTestImplementation ("io.mockk:mockk-android:1.13.16")
+
+    testImplementation ("net.bytebuddy:byte-buddy:1.14.0")
+
+    //coroutine test
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+
+    //mockwebserver
+    testImplementation ("com.squareup.okhttp3:mockwebserver:4.9.3")
+
+    //hilt android test
+    androidTestImplementation ("com.google.dagger:hilt-android-testing:2.44")
 }
 
 kapt {

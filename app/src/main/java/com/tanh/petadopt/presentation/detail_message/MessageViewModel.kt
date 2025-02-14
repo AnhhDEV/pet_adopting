@@ -27,9 +27,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MessageViewModel @Inject constructor(
-    private val auth: GoogleAuthUiClient,
-    private val repository: ChatRepository,
-    private val azureBlobStorage: AzureBlobStorage
+    var auth: GoogleAuthUiClient,
+    var repository: ChatRepository,
+    var azureBlobStorage: AzureBlobStorage
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MessageUiState())

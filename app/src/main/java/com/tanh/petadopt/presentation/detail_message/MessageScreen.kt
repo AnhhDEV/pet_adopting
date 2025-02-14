@@ -49,13 +49,16 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import coil3.compose.AsyncImage
 import com.tanh.petadopt.R
+import com.tanh.petadopt.core.util.TestTags
 import com.tanh.petadopt.presentation.OneTimeEvent
 import com.tanh.petadopt.presentation.components.MessageItem
 import com.tanh.petadopt.ui.theme.PetAdoptTheme
@@ -84,11 +87,12 @@ fun MessageScreen(
         false
     )
 
-    val pickVisualMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if(uri != null) {
-            viewModel?.upImage(uri = uri, chatId = chatId)
+    val pickVisualMedia =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+                viewModel?.upImage(uri = uri, chatId = chatId)
+            }
         }
-    }
 
     LaunchedEffect(true) {
         viewModel?.channel?.collect { event ->
@@ -175,7 +179,10 @@ fun MessageScreen(
                             inputMessage = it
                             viewModel?.onMessageChange(it)
                         },
-                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp)),
+                        modifier = Modifier
+                            .testTag(TestTags.INPUT_MESSAGE_TEXT_FIELD)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp)),
                         placeholder = {
                             Text(text = "Type your message")
                         },
@@ -208,7 +215,7 @@ fun MessageScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.send_message),
                             tint = Color(0xFFFF5E62),
                             modifier = Modifier.size(40.dp)
                         )

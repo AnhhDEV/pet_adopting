@@ -89,7 +89,7 @@ class AddViewModel @Inject constructor(
         }
     }
 
-    suspend fun getAddress(address: String) {
+    private suspend fun getAddress(address: String) {
             val feature = geocoding.getCoordinate(
                 query = address,
                 accessToken = Util.MAPBOX_TOKEN

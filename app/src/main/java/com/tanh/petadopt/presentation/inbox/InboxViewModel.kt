@@ -49,7 +49,6 @@ class InboxViewModel @Inject constructor(
         _state.value = _state.value.copy(
             isLoading = true
         )
-        Log.d("repo",userId)
         chatRepository.getChats(
             userId = userId
         ).collect { res ->

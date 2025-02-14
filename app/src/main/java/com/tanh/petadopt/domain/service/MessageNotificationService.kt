@@ -111,7 +111,7 @@ class MessageNotificationService : Service() {
                 lastTime.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
             val timeDifference = Duration.between(lastTimeDate, currentTimeDate).toSeconds()
             Log.d("MNS", "time: $timeDifference")
-            return timeDifference in (0..10)
+            return timeDifference in (0..40)
         }
         return false
     }
