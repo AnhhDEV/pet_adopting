@@ -16,6 +16,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
+import com.google.common.truth.Truth
+import com.mapbox.maps.extension.style.expressions.dsl.generated.any
 import com.tanh.petadopt.MainActivity
 import com.tanh.petadopt.R
 import com.tanh.petadopt.core.util.TestTags
@@ -35,9 +37,11 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -57,6 +61,8 @@ class MessageScreenTest {
     @MockK
     val mockRepository: ChatRepository = mockk(relaxed = true)
 
+    private lateinit var viewModel: MessageViewModel
+
     @MockK
     val googleAuth: GoogleAuthUiClient = mockk()
 
@@ -66,23 +72,24 @@ class MessageScreenTest {
     @Before
     fun setUp() {
         hiltRule.inject()
+
+        val fakeMessages = listOf<Message>()
+
+        coEvery { googleAuth.getSignedInUser()?.userId } returns USER_ID
+
         coEvery {
                 mockRepository.createMessage(any(), any())
         } returns Unit
 
         coEvery {
-            mockRepository.getMessages(any())
+            mockRepository.getMessages(CHAT_ID)
         } returns flow {
-            emit(Result.Success(listOf(Message())))
+            emit(Result.Success(fakeMessages))
         }
         composeRule.activity.runOnUiThread {
             composeRule.activity.setContent {
                 val navController = rememberNavController()
-                val viewModel: MessageViewModel = hiltViewModel<MessageViewModel>().apply {
-                    this.repository = mockRepository
-                    this.auth = googleAuth
-                    this.azureBlobStorage = azure
-                }
+                viewModel = MessageViewModel(googleAuth, mockRepository, azure)
                 PetAdoptTheme {
                     NavHost(navController = navController, startDestination = Util.MESSENGER) {
                         composable(route = Util.MESSENGER) {
@@ -100,8 +107,9 @@ class MessageScreenTest {
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun enterMessageScreen_showInputMessage() {
+    fun enterMessageScreen_showInputMessage() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         //type a message
         composeRule.onNodeWithTag(TestTags.INPUT_MESSAGE_TEXT_FIELD).performTextInput("hello-world")
@@ -111,6 +119,7 @@ class MessageScreenTest {
     }
 
     companion object {
+        const val USER_ID = "FakeUserId"
         const val CHAT_ID = "FakeChatId"
         const val RECEIVER_ID = "FakeReceiverId"
     }
